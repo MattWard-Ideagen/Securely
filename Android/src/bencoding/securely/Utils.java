@@ -11,6 +11,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.util.Random;
 
 import org.appcelerator.titanium.TiApplication;
 import org.appcelerator.titanium.io.TiBaseFile;
@@ -72,11 +75,32 @@ public class Utils {
 		return outputFile;
 	}
 	public static File createTempFileFromFileAtPath(String path) throws IOException{	
-		TiFileHelper helper = new TiFileHelper(TiApplication.getInstance().getApplicationContext());
-		InputStream stream = helper.openInputStream(path, true);
-		File tempFile = helper.getTempFileFromInputStream(stream,TEMP_PREFIX,true);
-		stream.close();
-		return tempFile;
+		
+		path = removeFilePrefixFromPath(path);
+
+		File outputDir = TiApplication.getInstance().getApplicationContext().getCacheDir(); 
+		File outputFile = File.createTempFile(TEMP_PREFIX, ".tmp", outputDir);
+		
+		InputStream is = null;
+		OutputStream os = null;
+		try {
+			is = new FileInputStream(path);
+			os = new FileOutputStream(outputFile);
+			byte[] buffer = new byte[2048];
+			int length;
+			while ((length = is.read(buffer)) > 0) {
+				os.write(buffer, 0, length);
+			}
+		} finally {
+			if(is != null) {
+				is.close();
+			}
+			if(os != null) {
+				os.close();
+			}
+		}
+
+		return outputFile;
 	}
 	
 	public static boolean pathIsInAssets(TiBaseFile file)
